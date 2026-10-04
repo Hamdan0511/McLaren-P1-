@@ -1,26 +1,215 @@
 @import "tailwindcss";
+@import "lenis/dist/lenis.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/*
+ * `inline` is required: next/font defines --font-* on <body>, so the
+ * references must resolve where they're used, not at :root.
+ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-orbitron), ui-sans-serif, sans-serif;
+  --font-hud: var(--font-rajdhani), ui-sans-serif, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@theme {
+  /* Carbon base */
+  --color-carbon: #050507;
+  --color-graphite: #0d0e12;
+  --color-graphite-2: #15171d;
+  /* Frame background baked into the P1 sequence renders */
+  --color-studio: #0d0d0d;
+
+  /* McLaren Papaya */
+  --color-papaya: #ff8000;
+  --color-papaya-deep: #e85d04;
+  --color-papaya-soft: #ffb066;
+
+  --color-glass: rgba(15, 17, 23, 0.65);
+  --color-hairline: rgba(255, 128, 0, 0.15);
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --animate-scroll-cue: scroll-cue 2.2s var(--ease-out-expo) infinite;
+  --animate-glow-pulse: glow-pulse 3.2s ease-in-out infinite;
+  --animate-ripple: ripple 700ms ease-out forwards;
+  --animate-scan: scan 6s linear infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes scroll-cue {
+    0% { transform: translateY(-100%); opacity: 0; }
+    30% { opacity: 1; }
+    100% { transform: translateY(220%); opacity: 0; }
+  }
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 0 1px rgb(255 128 0 / 0.45), 0 0 18px rgb(255 128 0 / 0.25); }
+    50% { box-shadow: 0 0 0 1px rgb(255 128 0 / 0.8), 0 0 34px rgb(255 128 0 / 0.45); }
+  }
+  @keyframes ripple {
+    from { transform: translate(-50%, -50%) scale(0); opacity: 0.55; }
+    to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  }
+  @keyframes scan {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(100vh); }
+  }
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  html {
+    background-color: var(--color-carbon);
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-carbon);
+    color: #f4f4f5;
+    overflow-x: clip;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-papaya);
+    color: var(--color-carbon);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-papaya);
+    outline-offset: 3px;
+  }
+
+  /* Slim papaya scrollbar for the document */
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(255 128 0 / 0.5) var(--color-carbon);
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-carbon); }
+  ::-webkit-scrollbar-thumb { background: rgb(255 128 0 / 0.45); border-radius: 999px; }
+}
+
+/* ---------- Surfaces ---------- */
+
+@utility glass {
+  background-color: var(--color-glass);
+  border: 1px solid var(--color-hairline);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+@utility glass-strong {
+  background-color: rgba(10, 11, 15, 0.82);
+  border: 1px solid rgba(255, 128, 0, 0.22);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+
+/* Cursor-tracked papaya light. Set --mx / --my (px) from JS. */
+@utility hover-light {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 400ms var(--ease-out-expo);
+    background: radial-gradient(
+      420px circle at var(--mx, 50%) var(--my, 0%),
+      rgb(255 128 0 / 0.16),
+      transparent 60%
+    );
+  }
+  &:hover::before { opacity: 1; }
+}
+
+/* HUD corner brackets */
+@utility hud-corners {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    --c: rgb(255 128 0 / 0.75);
+    --l: 14px;
+    background:
+      linear-gradient(var(--c), var(--c)) top left / var(--l) 1px,
+      linear-gradient(var(--c), var(--c)) top left / 1px var(--l),
+      linear-gradient(var(--c), var(--c)) top right / var(--l) 1px,
+      linear-gradient(var(--c), var(--c)) top right / 1px var(--l),
+      linear-gradient(var(--c), var(--c)) bottom left / var(--l) 1px,
+      linear-gradient(var(--c), var(--c)) bottom left / 1px var(--l),
+      linear-gradient(var(--c), var(--c)) bottom right / var(--l) 1px,
+      linear-gradient(var(--c), var(--c)) bottom right / 1px var(--l);
+    background-repeat: no-repeat;
+  }
+}
+
+@utility glow-papaya {
+  box-shadow: 0 0 0 1px rgb(255 128 0 / 0.55), 0 0 28px rgb(255 128 0 / 0.35),
+    inset 0 0 18px rgb(255 128 0 / 0.12);
+}
+
+@utility text-glow {
+  text-shadow: 0 0 24px rgb(255 128 0 / 0.45);
+}
+
+@utility ambient-top {
+  background-image: radial-gradient(ellipse at top, rgb(255 128 0 / 0.16), transparent 60%);
+}
+
+/* Faint engineering grid used behind HUD sections */
+@utility grid-lines {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Form controls ---------- */
+
+@utility field {
+  width: 100%;
+  border-radius: 0.75rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.9rem 1rem;
+  color: #fafafa;
+  font-size: 0.95rem;
+  transition: border-color 200ms, background-color 200ms, box-shadow 200ms;
+  &::placeholder { color: rgb(255 255 255 / 0.3); }
+  &:hover { border-color: rgb(255 128 0 / 0.3); }
+  &:focus {
+    outline: none;
+    border-color: rgb(255 128 0 / 0.7);
+    background-color: rgba(255, 128, 0, 0.04);
+    box-shadow: 0 0 0 4px rgb(255 128 0 / 0.12);
+  }
+  &[aria-invalid="true"] { border-color: rgb(248 113 113 / 0.7); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
